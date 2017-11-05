@@ -60,3 +60,6 @@ target/
 # Images
 *.png
 *.svg
+
+# Config file
+*/config.py

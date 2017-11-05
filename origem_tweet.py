@@ -6,6 +6,9 @@ import sys
 
 client = MongoClient()
 client = MongoClient("mongodb://188.166.40.27:27017/")
+db = client['twixplorer']
+tweets = db['tweets']
+
 
 time_window_str = sys.argv[1]
 if time_window_str == "1h":

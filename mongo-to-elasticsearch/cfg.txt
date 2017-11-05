@@ -1,0 +1,8 @@
+query_type = ids_lookup
+query = 926992460747767813
+lang = None
+max_days = None
+max_tweets = None
+max_id = None
+since_id = None
+coordinates = None

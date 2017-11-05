@@ -27,11 +27,11 @@ from lib_time import sleep_seconds
 import math
 
 # Define vars
-esclient = Elasticsearch()#Elasticsearch([ES_URI])
+esclient = Elasticsearch([ES_URI])
 mgclient = MongoClient(MG_URI)
 
 # max number of tweets sent at once to DB
-MAX_TWEETS = 100
+MAX_TWEETS = 1000
 
 DATABASE = 'inep'
 # This will be the index you need to select in Kibana
@@ -89,6 +89,8 @@ for i in range(1,15):
         # fixes from Mongo to Elasticsearch
         data.pop('_id')
         data = dict(data)
+
+
         data['status']['timestamp_ms'] = int(data['status']['timestamp_ms'])
         geocode = data['reverse_geocode']
 
@@ -113,25 +115,47 @@ for i in range(1,15):
             if math.isnan(data['status']['place']['id']):
                 data['status']['place']['id']=None
 
+        if 'retweeted_status' in data['status'].keys() :
+
+            if(data['status']['retweeted_status']['place'] is not None ):
+                if math.isnan(data['status']['retweeted_status']['place']['id']):
+                    data['status']['retweeted_status']['place']['id']=None
+
+
+            if 'quoted_status' in data['status']['retweeted_status'].keys() :
+                if(data['status']['retweeted_status']['quoted_status']['place'] is not None ):
+                    if math.isnan(data['status']['retweeted_status']['quoted_status']['place']['id']):
+                        data['status']['retweeted_status']['quoted_status']['place']['id']=None
+
+        if 'quoted_status' in data['status'].keys() :
+            if(data['status']['quoted_status']['place'] is not None ):
+                if math.isnan(data['status']['quoted_status']['place']['id']):
+                    data['status']['quoted_status']['place']['id']=None
+
+
+
         action = {
             "_index": title,
             "_type": "statuses",
             "_routing": "br-gov-inep",
             "_source": data}
         actions_append(action)
-
+        print
         while True:
             try: # dump x number of objects at a time
-                print('is_str  ',data['status']['id_str'])
+                # print('is_str  ',data['status']['id_str'])
                 # print('place  ',data['status']['place'])
+                # print(len(actions))
                 if len(actions) >= MAX_TWEETS:
                     # deque(parallel_bulk(esclient, actions), maxlen=0)
                     bulk(esclient, actions)
-                    actions = []
+                    print('Sent ',MAX_TWEETS,' tweets to DataBase')
+                    actions = []; actions_append = actions.append
                     # quit()
                 sleep(.01)
             except elasticsearch.helpers.BulkIndexError as e:
                 pprint(str(e))
+
                 sleep_seconds(60)
                 # raise e
             else: break

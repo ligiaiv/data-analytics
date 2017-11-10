@@ -1,0 +1,2843 @@
+{
+  "template": "twitter-*",
+  "version": 1,
+  "settings": {
+    "refresh_interval": "1s",
+    "number_of_shards": 3,
+    "number_of_replicas": 2,
+    "index": {
+      "query": {
+        "default_field": "status.text"
+      },
+      "mapping": {
+        "coerce": false,
+        "nested_fields.limit": 35,
+        "depth.limit": 10,
+        "total_fields.limit": 2000
+      }
+    },
+    "analysis": {
+      "analyzer": {
+        "brazilian": {
+          "tokenizer": "uax_url_email",
+          "filter": [
+            "lowercase",
+            "brazilian_stemmer",
+            "brazilian_keywords",
+            "brazilian_stop"
+          ]
+        },
+        "brazilian_stop": {
+          "tokenizer": "uax_url_email",
+          "filter": [
+            "lowercase",
+            "brazilian_stemmer",
+            "brazilian_stop"
+          ]
+        }
+      },
+      "filter": {
+        "folding_preserved": {
+          "type": "asciifolding",
+          "preserve_original": true
+        },
+        "brazilian_keywords": {
+          "type": "keyword_marker",
+          "keywords": [
+            "ana",
+            "anasem",
+            "aneb",
+            "anresc",
+            "enade",
+            "encceja",
+            "enem",
+            "ideb",
+            "inep",
+            "revalida",
+            "saeb",
+            "saeg",
+            "sinaes"
+          ]
+        },
+        "brazilian_stemmer": {
+          "type": "stemmer",
+          "language": "brazilian"
+        },
+        "brazilian_stop": {
+          "type": "stop",
+          "stopwords": "_brazilian_",
+          "ignore_case": true
+        },
+        "brazilian_synonyms": {
+          "type": "synonym",
+          "synonyms": [
+            "liceu,academia"
+          ]
+        }
+      },
+      "normalizer": {
+        "normalizer_folding_lower": {
+          "type": "custom",
+          "filter": [
+            "folding_preserved",
+            "lowercase"
+          ]
+        }
+      },
+      "tokenizer": {
+        "edge_ngram_ld": {
+          "type": "edge_ngram",
+          "min_gram": 3,
+          "max_gram": 3,
+          "token_chars": [
+            "letter"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "statuses": {
+      "_routing": {
+        "required": true
+      },
+      "properties": {
+        "categories": {
+          "type": "keyword"
+        },
+        "keywords": {
+          "type": "keyword"
+        },
+        "reverse_geocode": {
+          "type": "geo_point"
+        },
+        "status": {
+          "type": "object",
+          "properties": {
+            "contributors": {
+              "type": "text",
+              "index": false,
+              "doc_values": false
+            },
+            "coordinates": {
+              "type": "geo_shape"
+            },
+            "created_at": {
+              "type": "date",
+              "format": "EEE MMM dd HH:mm:ss Z YYYY||strict_date_optional_time||epoch_millis",
+              "doc_values": true
+            },
+            "entities": {
+              "type": "object",
+              "properties": {
+                "hashtags": {
+                  "type": "nested",
+                  "properties": {
+                    "indices": {
+                      "type": "short",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "text": {
+                      "type": "keyword"
+                    }
+                  }
+                },
+                "symbols": {
+                  "type": "nested",
+                  "properties": {
+                    "indices": {
+                      "type": "short",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "text": {
+                      "type": "keyword"
+                    }
+                  }
+                },
+                "media": {
+                  "type": "nested",
+                  "properties": {
+                    "id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "id_str": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "indices": {
+                      "type": "short",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "type": {
+                      "type": "keyword"
+                    },
+                    "display_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "expanded_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "media_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "media_url_https": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "size": {
+                      "type": "object",
+                      "enabled": false,
+                      "properties": {
+                        "thumb": {
+                          "type": "object",
+                          "properties": {
+                            "h": {
+                              "type": "short",
+                              "index": false
+                            },
+                            "resize": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            }
+                          }
+                        },
+                        "large": {
+                          "type": "object",
+                          "properties": {
+                            "h": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "resize": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            }
+                          }
+                        },
+                        "medium": {
+                          "type": "object",
+                          "properties": {
+                            "h": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "resize": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            }
+                          }
+                        },
+                        "small": {
+                          "type": "object",
+                          "properties": {
+                            "h": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "resize": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_status_id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "source_status_id_str": {
+                      "type": "keyword"
+                    },
+                    "url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    }
+                  }
+                },
+                "urls": {
+                  "type": "nested",
+                  "properties": {
+                    "display_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "expanded_url": {
+                      "type": "keyword"
+                    },
+                    "indices": {
+                      "type": "short",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    }
+                  }
+                },
+                "user_mentions": {
+                  "type": "nested",
+                  "properties": {
+                    "id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "id_str": {
+                      "type": "keyword"
+                    },
+                    "indices": {
+                      "type": "short",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "name": {
+                      "type": "text"
+                    },
+                    "screen_name": {
+                      "type": "keyword"
+                    }
+                  }
+                }
+              }
+            },
+            "extended_entities": {
+              "type": "object",
+              "properties": {
+                "media": {
+                  "type": "nested",
+                  "properties": {
+                    "id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "id_str": {
+                      "type": "keyword"
+                    },
+                    "indices": {
+                      "type": "short",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "source_status_id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "source_status_id_str": {
+                      "type": "keyword"
+                    },
+                    "source_user_id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "source_user_id_str": {
+                      "type": "keyword"
+                    },
+                    "type": {
+                      "type": "keyword"
+                    },
+                    "display_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "expanded_url": {
+                      "type": "keyword"
+                    },
+                    "media_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "media_url_https": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "size": {
+                      "enabled": false,
+                      "type": "object",
+                      "properties": {
+                        "thumb": {
+                          "type": "object",
+                          "properties": {
+                            "h": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "resize": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            }
+                          }
+                        },
+                        "large": {
+                          "type": "object",
+                          "properties": {
+                            "h": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "resize": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            }
+                          }
+                        },
+                        "medium": {
+                          "type": "object",
+                          "properties": {
+                            "h": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "resize": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            }
+                          }
+                        },
+                        "small": {
+                          "type": "object",
+                          "properties": {
+                            "h": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "resize": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "video_info": {
+                      "type": "object",
+                      "properties": {
+                        "aspect_ratio": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "duration_millis": {
+                          "type": "integer",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "variants": {
+                          "type": "nested",
+                          "properties": {
+                            "bitrate": {
+                              "type": "integer",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "content_type": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "url": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "favorite_count": {
+              "type": "integer"
+            },
+            "favorited": {
+              "type": "boolean",
+              "index": false,
+              "doc_values": false
+            },
+            "filter_level": {
+              "type": "keyword",
+              "index": false,
+              "doc_values": false
+            },
+            "geo": {
+              "type": "geo_shape"
+            },
+            "id": {
+              "type": "long",
+              "index": false,
+              "doc_values": false
+            },
+            "id_str": {
+              "type": "keyword"
+            },
+            "in_reply_to_screen_name": {
+              "type": "keyword"
+            },
+            "in_reply_to_status_id": {
+              "type": "long",
+              "index": false,
+              "doc_values": false
+            },
+            "in_reply_to_status_id_str": {
+              "type": "keyword"
+            },
+            "in_reply_to_user_id": {
+              "type": "long",
+              "index": false,
+              "doc_values": false
+            },
+            "in_reply_to_user_id_str": {
+              "type": "keyword"
+            },
+            "is_quote_status": {
+              "type": "boolean"
+            },
+            "lang": {
+              "type": "keyword"
+            },
+            "place": {
+              "type": "nested",
+              "properties": {
+                "attributes": {
+                  "type": "object"
+                },
+                "bounding_box": {
+                  "type": "geo_shape",
+                  "ignore_malformed": true,
+                  "coerce": true
+                },
+                "country": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "country_code": {
+                  "type": "keyword"
+                },
+                "full_name": {
+                  "type": "keyword"
+                },
+                "id": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "name": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "place_type": {
+                  "type": "keyword"
+                },
+                "url": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                }
+              }
+            },
+            "possibly_sensitive": {
+              "type": "boolean",
+              "index": false,
+              "doc_values": false
+            },
+            "quote_count": {
+              "type": "integer"
+            },
+            "quoted_status": {
+              "type": "object",
+              "properties": {
+                "contributors": {
+                  "type": "text",
+                  "index": false,
+                  "doc_values": false
+                },
+                "coordinates": {
+                  "type": "geo_shape"
+                },
+                "created_at": {
+                  "type": "date",
+                  "format": "EEE MMM dd HH:mm:ss Z YYYY||strict_date_optional_time||epoch_millis"
+                },
+                "entities": {
+                  "type": "object",
+                  "properties": {
+                    "hashtags": {
+                      "type": "nested",
+                      "properties": {
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "text": {
+                          "type": "keyword"
+                        }
+                      }
+                    },
+                    "symbols": {
+                      "type": "nested",
+                      "properties": {
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "text": {
+                          "type": "keyword"
+                        }
+                      }
+                    },
+                    "media": {
+                      "type": "nested",
+                      "properties": {
+                        "id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "id_str": {
+                          "type": "keyword"
+                        },
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "source_status_id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "source_status_id_str": {
+                          "type": "keyword"
+                        },
+                        "source_user_id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "source_user_id_str": {
+                          "type": "keyword"
+                        },
+                        "type": {
+                          "type": "keyword"
+                        },
+                        "display_url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "expanded_url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "media_url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "media_url_https": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "size": {
+                          "enabled": false,
+                          "type": "object",
+                          "properties": {
+                            "thumb": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "large": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "medium": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "small": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "url": {
+                          "type": "keyword"
+                        }
+                      }
+                    },
+                    "urls": {
+                      "type": "nested",
+                      "properties": {
+                        "display_url": {
+                          "type": "keyword"
+                        },
+                        "expanded_url": {
+                          "type": "keyword",
+                          "doc_values": false
+                        },
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "url": {
+                          "type": "keyword"
+                        }
+                      }
+                    },
+                    "user_mentions": {
+                      "type": "nested",
+                      "properties": {
+                        "id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "id_str": {
+                          "type": "keyword"
+                        },
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "name": {
+                          "type": "text"
+                        },
+                        "screen_name": {
+                          "type": "keyword"
+                        }
+                      }
+                    }
+                  }
+                },
+                "extended_entities": {
+                  "type": "object",
+                  "properties": {
+                    "media": {
+                      "type": "nested",
+                      "properties": {
+                        "id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "id_str": {
+                          "type": "keyword"
+                        },
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "source_status_id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "source_status_id_str": {
+                          "type": "keyword"
+                        },
+                        "source_user_id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "source_user_id_str": {
+                          "type": "keyword"
+                        },
+                        "type": {
+                          "type": "keyword"
+                        },
+                        "display_url": {
+                          "type": "keyword"
+                        },
+                        "expanded_url": {
+                          "type": "keyword"
+                        },
+                        "media_url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "media_url_https": {
+                          "type": "keyword",
+                          "index": false
+                        },
+                        "size": {
+                          "enabled": false,
+                          "type": "object",
+                          "properties": {
+                            "thumb": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "large": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "medium": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "small": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "url": {
+                          "type": "keyword"
+                        },
+                        "video_info": {
+                          "type": "object",
+                          "properties": {
+                            "aspect_ratio": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "duration_millis": {
+                              "type": "integer"
+                            },
+                            "variants": {
+                              "type": "nested",
+                              "properties": {
+                                "bitrate": {
+                                  "type": "integer",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "content_type": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "url": {
+                                  "type": "keyword",
+                                  "index": false
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "favorite_count": {
+                  "type": "integer"
+                },
+                "favorited": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "filter_level": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "geo": {
+                  "type": "geo_shape"
+                },
+                "id": {
+                  "type": "long",
+                  "index": false,
+                  "doc_values": false
+                },
+                "id_str": {
+                  "type": "keyword"
+                },
+                "in_reply_to_screen_name": {
+                  "type": "keyword"
+                },
+                "in_reply_to_status_id": {
+                  "type": "long",
+                  "index": false,
+                  "doc_values": false
+                },
+                "in_reply_to_status_id_str": {
+                  "type": "keyword"
+                },
+                "in_reply_to_user_id": {
+                  "type": "long",
+                  "index": false,
+                  "doc_values": false
+                },
+                "in_reply_to_user_id_str": {
+                  "type": "keyword"
+                },
+                "is_quote_status": {
+                  "type": "boolean"
+                },
+                "lang": {
+                  "type": "keyword"
+                },
+                "place": {
+                  "type": "nested",
+                  "properties": {
+                    "attributes": {
+                      "type": "object"
+                    },
+                    "bounding_box": {
+                      "type": "geo_shape",
+                      "ignore_malformed": true,
+                      "coerce": true
+                    },
+                    "country": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "country_code": {
+                      "type": "keyword"
+                    },
+                    "full_name": {
+                      "type": "keyword"
+                    },
+                    "id": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "name": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "place_type": {
+                      "type": "keyword"
+                    },
+                    "url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    }
+                  }
+                },
+                "possibly_sensitive": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "quote_count": {
+                  "type": "integer"
+                },
+                "retweet_count": {
+                  "type": "integer"
+                },
+                "retweeted": {
+                  "type": "boolean",
+                  "index": false
+                },
+                "source": {
+                  "type": "text",
+                  "norms": false
+                },
+                "text": {
+                  "type": "text",
+                  "index": false
+                },
+                "timestamp_ms": {
+                  "type": "date"
+                },
+                "truncated": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "user": {
+                  "type": "object",
+                  "properties": {
+                    "contributors_enabled": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "created_at": {
+                      "type": "date",
+                      "format": "EEE MMM dd HH:mm:ss Z YYYY||strict_date_optional_time||epoch_millis"
+                    },
+                    "default_profile": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "default_profile_image": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "description": {
+                      "type": "text"
+                    },
+                    "favourites_count": {
+                      "type": "integer"
+                    },
+                    "follow_request_sent": {
+                      "type": "object"
+                    },
+                    "following": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "followers_count": {
+                      "type": "integer"
+                    },
+                    "friends_count": {
+                      "type": "integer"
+                    },
+                    "geo_enabled": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "id_str": {
+                      "type": "keyword",
+                      "store": true
+                    },
+                    "is_translator": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "lang": {
+                      "type": "keyword"
+                    },
+                    "listed_count": {
+                      "type": "integer"
+                    },
+                    "location": {
+                      "type": "text"
+                    },
+                    "name": {
+                      "type": "text"
+                    },
+                    "notifications": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_background_color": {
+                      "type": "keyword"
+                    },
+                    "profile_background_image_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_background_image_url_https": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_background_tile": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_banner_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_image_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_image_url_https": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_link_color": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_sidebar_border_color": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_sidebar_fill_color": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_text_color": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_use_background_image": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "protected": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "screen_name": {
+                      "type": "keyword"
+                    },
+                    "statuses_count": {
+                      "type": "integer"
+                    },
+                    "time_zone": {
+                      "type": "text",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "translator_type": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "url": {
+                      "type": "text",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "utc_offset": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "quoted_status_id": {
+              "type": "long",
+              "index": false,
+              "doc_values": false
+            },
+            "quoted_status_id_str": {
+              "type": "keyword"
+            },
+            "reply_count": {
+              "type": "integer"
+            },
+            "retweet_count": {
+              "type": "integer"
+            },
+            "retweeted": {
+              "type": "boolean",
+              "index": false,
+              "doc_values": false
+            },
+            "retweeted_status": {
+              "type": "object",
+              "properties": {
+                "contributors": {
+                  "type": "text",
+                  "index": false,
+                  "doc_values": false
+                },
+                "coordinates": {
+                  "type": "geo_shape"
+                },
+                "created_at": {
+                  "type": "date",
+                  "format": "EEE MMM dd HH:mm:ss Z YYYY||strict_date_optional_time||epoch_millis"
+                },
+                "entities": {
+                  "type": "object",
+                  "properties": {
+                    "hashtags": {
+                      "type": "nested",
+                      "properties": {
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "text": {
+                          "type": "keyword"
+                        }
+                      }
+                    },
+                    "symbols": {
+                      "type": "nested",
+                      "properties": {
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "text": {
+                          "type": "keyword"
+                        }
+                      }
+                    },
+                    "media": {
+                      "type": "nested",
+                      "properties": {
+                        "id": {
+                          "type": "long"
+                        },
+                        "id_str": {
+                          "type": "keyword"
+                        },
+                        "indices": {
+                          "type": "short",
+                          "index": false
+                        },
+                        "source_status_id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "source_status_id_str": {
+                          "type": "keyword"
+                        },
+                        "source_user_id": {
+                          "type": "long"
+                        },
+                        "source_user_id_str": {
+                          "type": "keyword"
+                        },
+                        "type": {
+                          "type": "keyword"
+                        },
+                        "display_url": {
+                          "type": "keyword"
+                        },
+                        "expanded_url": {
+                          "type": "keyword"
+                        },
+                        "media_url": {
+                          "type": "keyword"
+                        },
+                        "media_url_https": {
+                          "type": "keyword",
+                          "index": false
+                        },
+                        "size": {
+                          "enabled": false,
+                          "type": "object",
+                          "properties": {
+                            "thumb": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "large": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "medium": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "small": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        }
+                      }
+                    },
+                    "urls": {
+                      "type": "nested",
+                      "properties": {
+                        "display_url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "expanded_url": {
+                          "type": "keyword"
+                        },
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        }
+                      }
+                    },
+                    "user_mentions": {
+                      "type": "nested",
+                      "properties": {
+                        "id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "id_str": {
+                          "type": "keyword"
+                        },
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "name": {
+                          "type": "text",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "screen_name": {
+                          "type": "keyword"
+                        }
+                      }
+                    }
+                  }
+                },
+                "extended_entities": {
+                  "type": "object",
+                  "properties": {
+                    "media": {
+                      "type": "nested",
+                      "properties": {
+                        "id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "id_str": {
+                          "type": "keyword"
+                        },
+                        "indices": {
+                          "type": "short",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "source_status_id": {
+                          "type": "long",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "source_status_id_str": {
+                          "type": "keyword"
+                        },
+                        "source_user_id": {
+                          "type": "long"
+                        },
+                        "source_user_id_str": {
+                          "type": "keyword"
+                        },
+                        "type": {
+                          "type": "keyword"
+                        },
+                        "display_url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "expanded_url": {
+                          "type": "keyword"
+                        },
+                        "media_url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "media_url_https": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "size": {
+                          "enabled": false,
+                          "type": "object",
+                          "properties": {
+                            "thumb": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "large": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "medium": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            },
+                            "small": {
+                              "type": "object",
+                              "properties": {
+                                "h": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "resize": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "video_info": {
+                          "type": "object",
+                          "properties": {
+                            "aspect_ratio": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "duration_millis": {
+                              "type": "integer"
+                            },
+                            "variants": {
+                              "type": "nested",
+                              "properties": {
+                                "bitrate": {
+                                  "type": "integer",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "content_type": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "url": {
+                                  "type": "keyword",
+                                  "index": false,
+                                  "doc_values": false
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "favorite_count": {
+                  "type": "integer"
+                },
+                "favorited": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "filter_level": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "geo": {
+                  "type": "geo_shape"
+                },
+                "id": {
+                  "type": "long",
+                  "index": false,
+                  "doc_values": false
+                },
+                "id_str": {
+                  "type": "keyword"
+                },
+                "in_reply_to_screen_name": {
+                  "type": "keyword"
+                },
+                "in_reply_to_status_id": {
+                  "type": "long",
+                  "index": false,
+                  "doc_values": false
+                },
+                "in_reply_to_status_id_str": {
+                  "type": "keyword"
+                },
+                "in_reply_to_user_id": {
+                  "type": "long",
+                  "index": false,
+                  "doc_values": false
+                },
+                "in_reply_to_user_id_str": {
+                  "type": "keyword"
+                },
+                "is_quote_status": {
+                  "type": "boolean"
+                },
+                "lang": {
+                  "type": "keyword"
+                },
+                "place": {
+                  "type": "object",
+                  "properties": {
+                    "attributes": {
+                      "type": "object"
+                    },
+                    "bounding_box": {
+                      "type": "geo_shape",
+                      "ignore_malformed": true,
+                      "coerce": true
+                    },
+                    "country": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "country_code": {
+                      "type": "keyword"
+                    },
+                    "full_name": {
+                      "type": "keyword"
+                    },
+                    "id": {
+                      "type": "keyword"
+                    },
+                    "name": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "place_type": {
+                      "type": "keyword"
+                    },
+                    "url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    }
+                  }
+                },
+                "possibly_sensitive": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "quote_count": {
+                  "type": "integer"
+                },
+                "quoted_status": {
+                  "properties": {
+                    "contributors": {
+                      "type": "text",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "coordinates": {
+                      "type": "geo_shape"
+                    },
+                    "created_at": {
+                      "type": "date",
+                      "format": "EEE MMM dd HH:mm:ss Z YYYY||strict_date_optional_time||epoch_millis"
+                    },
+                    "entities": {
+                      "type": "object",
+                      "properties": {
+                        "hashtags": {
+                          "type": "nested",
+                          "properties": {
+                            "indices": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "text": {
+                              "type": "keyword"
+                            }
+                          }
+                        },
+                        "symbols": {
+                          "type": "nested",
+                          "properties": {
+                            "indices": {
+                              "type": "short",
+                              "index": false
+                            },
+                            "text": {
+                              "type": "keyword"
+                            }
+                          }
+                        },
+                        "media": {
+                          "type": "nested",
+                          "properties": {
+                            "id": {
+                              "type": "long",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "id_str": {
+                              "type": "keyword"
+                            },
+                            "indices": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "source_status_id": {
+                              "type": "long"
+                            },
+                            "source_status_id_str": {
+                              "type": "keyword"
+                            },
+                            "source_user_id": {
+                              "type": "long",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "source_user_id_str": {
+                              "type": "keyword"
+                            },
+                            "type": {
+                              "type": "keyword"
+                            },
+                            "display_url": {
+                              "type": "text",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "expanded_url": {
+                              "type": "text",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "media_url": {
+                              "type": "text",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "media_url_https": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "size": {
+                              "type": "object",
+                              "properties": {
+                                "thumb": {
+                                  "type": "object",
+                                  "properties": {
+                                    "h": {
+                                      "type": "short",
+                                      "index": false,
+                                      "doc_values": false
+                                    },
+                                    "resize": {
+                                      "type": "keyword",
+                                      "index": false,
+                                      "doc_values": false
+                                    }
+                                  }
+                                },
+                                "large": {
+                                  "type": "object",
+                                  "properties": {
+                                    "h": {
+                                      "type": "short",
+                                      "index": false,
+                                      "doc_values": false
+                                    },
+                                    "resize": {
+                                      "type": "keyword",
+                                      "index": false,
+                                      "doc_values": false
+                                    }
+                                  }
+                                },
+                                "medium": {
+                                  "type": "object",
+                                  "properties": {
+                                    "h": {
+                                      "type": "short",
+                                      "index": false,
+                                      "doc_values": false
+                                    },
+                                    "resize": {
+                                      "type": "keyword",
+                                      "index": false,
+                                      "doc_values": false
+                                    }
+                                  }
+                                },
+                                "small": {
+                                  "type": "object",
+                                  "properties": {
+                                    "h": {
+                                      "type": "short",
+                                      "index": false,
+                                      "doc_values": false
+                                    },
+                                    "resize": {
+                                      "type": "keyword",
+                                      "index": false,
+                                      "doc_values": false
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "url": {
+                              "type": "text",
+                              "norms": false
+                            }
+                          }
+                        },
+                        "urls": {
+                          "type": "nested",
+                          "properties": {
+                            "display_url": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "expanded_url": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "indices": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "url": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            }
+                          }
+                        },
+                        "user_mentions": {
+                          "type": "nested",
+                          "properties": {
+                            "id": {
+                              "type": "long",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "id_str": {
+                              "type": "keyword"
+                            },
+                            "indices": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "name": {
+                              "type": "text",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "screen_name": {
+                              "type": "keyword"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "extended_entities": {
+                      "type": "object",
+                      "properties": {
+                        "media": {
+                          "type": "nested",
+                          "properties": {
+                            "id": {
+                              "type": "long",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "id_str": {
+                              "type": "keyword"
+                            },
+                            "indices": {
+                              "type": "short",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "source_status_id": {
+                              "type": "long",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "source_status_id_str": {
+                              "type": "keyword"
+                            },
+                            "source_user_id": {
+                              "type": "long",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "source_user_id_str": {
+                              "type": "keyword"
+                            },
+                            "type": {
+                              "type": "keyword"
+                            },
+                            "display_url": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "expanded_url": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "media_url": {
+                              "type": "text",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "media_url_https": {
+                              "type": "keyword",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "size": {
+                              "enabled": false,
+                              "type": "object",
+                              "properties": {
+                                "thumb": {
+                                  "type": "object",
+                                  "properties": {
+                                    "h": {
+                                      "type": "short",
+                                      "index": false,
+                                      "doc_values": false
+                                    },
+                                    "resize": {
+                                      "type": "keyword",
+                                      "index": false,
+                                      "doc_values": false
+                                    }
+                                  }
+                                },
+                                "large": {
+                                  "type": "object",
+                                  "properties": {
+                                    "h": {
+                                      "type": "short",
+                                      "index": false,
+                                      "doc_values": false
+                                    },
+                                    "resize": {
+                                      "type": "keyword",
+                                      "index": false,
+                                      "doc_values": false
+                                    }
+                                  }
+                                },
+                                "medium": {
+                                  "type": "object",
+                                  "properties": {
+                                    "h": {
+                                      "type": "short",
+                                      "index": false,
+                                      "doc_values": false
+                                    },
+                                    "resize": {
+                                      "type": "keyword",
+                                      "index": false,
+                                      "doc_values": false
+                                    }
+                                  }
+                                },
+                                "small": {
+                                  "type": "object",
+                                  "properties": {
+                                    "h": {
+                                      "type": "short",
+                                      "index": false,
+                                      "doc_values": false
+                                    },
+                                    "resize": {
+                                      "type": "keyword",
+                                      "index": false,
+                                      "doc_values": false
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "url": {
+                              "type": "text",
+                              "index": false,
+                              "doc_values": false
+                            },
+                            "video_info": {
+                              "type": "object",
+                              "properties": {
+                                "aspect_ratio": {
+                                  "type": "short",
+                                  "index": false,
+                                  "doc_values": false
+                                },
+                                "duration_millis": {
+                                  "type": "integer"
+                                },
+                                "variants": {
+                                  "type": "nested",
+                                  "properties": {
+                                    "bitrate": {
+                                      "type": "integer",
+                                      "index": false,
+                                      "doc_values": false
+                                    },
+                                    "content_type": {
+                                      "type": "keyword",
+                                      "index": false,
+                                      "doc_values": false
+                                    },
+                                    "url": {
+                                      "type": "keyword",
+                                      "index": false,
+                                      "doc_values": false
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "favorite_count": {
+                      "type": "integer"
+                    },
+                    "favorited": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "filter_level": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "geo": {
+                      "type": "geo_shape"
+                    },
+                    "id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "id_str": {
+                      "type": "keyword"
+                    },
+                    "in_reply_to_screen_name": {
+                      "type": "keyword"
+                    },
+                    "in_reply_to_status_id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "in_reply_to_status_id_str": {
+                      "type": "keyword"
+                    },
+                    "in_reply_to_user_id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "in_reply_to_user_id_str": {
+                      "type": "keyword"
+                    },
+                    "is_quote_status": {
+                      "type": "boolean"
+                    },
+                    "lang": {
+                      "type": "keyword"
+                    },
+                    "place": {
+                      "type": "nested",
+                      "properties": {
+                        "attributes": {
+                          "type": "object"
+                        },
+                        "bounding_box": {
+                          "type": "geo_shape",
+                          "ignore_malformed": true,
+                          "coerce": true
+                        },
+                        "country": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "country_code": {
+                          "type": "keyword"
+                        },
+                        "full_name": {
+                          "type": "keyword"
+                        },
+                        "id": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "name": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "place_type": {
+                          "type": "keyword"
+                        },
+                        "url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        }
+                      }
+                    },
+                    "possibly_sensitive": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "quote_count": {
+                      "type": "integer"
+                    },
+                    "retweet_count": {
+                      "type": "integer"
+                    },
+                    "retweeted": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "source": {
+                      "type": "keyword"
+                    },
+                    "text": {
+                      "type": "text",
+                      "index": false
+                    },
+                    "timestamp_ms": {
+                      "type": "date"
+                    },
+                    "truncated": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "contributors_enabled": {
+                          "type": "boolean",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "created_at": {
+                          "type": "date",
+                          "format": "EEE MMM dd HH:mm:ss Z YYYY||strict_date_optional_time||epoch_millis"
+                        },
+                        "default_profile": {
+                          "type": "boolean",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "default_profile_image": {
+                          "type": "boolean",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "description": {
+                          "type": "text"
+                        },
+                        "favourites_count": {
+                          "type": "integer"
+                        },
+                        "follow_request_sent": {
+                          "type": "object"
+                        },
+                        "following": {
+                          "type": "boolean",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "followers_count": {
+                          "type": "integer"
+                        },
+                        "friends_count": {
+                          "type": "integer"
+                        },
+                        "geo_enabled": {
+                          "type": "boolean"
+                        },
+                        "id": {
+                          "index": false,
+                          "doc_values": false,
+                          "type": "long"
+                        },
+                        "id_str": {
+                          "type": "keyword",
+                          "store": true
+                        },
+                        "is_translator": {
+                          "type": "boolean",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "lang": {
+                          "type": "keyword"
+                        },
+                        "listed_count": {
+                          "type": "integer"
+                        },
+                        "location": {
+                          "type": "text"
+                        },
+                        "name": {
+                          "type": "text"
+                        },
+                        "notifications": {
+                          "type": "boolean",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_background_color": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_background_image_url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_background_image_url_https": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_background_tile": {
+                          "type": "boolean",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_banner_url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_image_url": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_image_url_https": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_link_color": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_sidebar_border_color": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_sidebar_fill_color": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_text_color": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "profile_use_background_image": {
+                          "type": "boolean",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "protected": {
+                          "type": "boolean",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "screen_name": {
+                          "type": "keyword"
+                        },
+                        "statuses_count": {
+                          "type": "integer"
+                        },
+                        "time_zone": {
+                          "type": "text",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "translator_type": {
+                          "type": "keyword",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "url": {
+                          "type": "text",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "utc_offset": {
+                          "type": "boolean",
+                          "index": false,
+                          "doc_values": false
+                        },
+                        "verified": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                },
+                "retweet_count": {
+                  "type": "integer"
+                },
+                "retweeted": {
+                  "type": "boolean",
+                  "index": false
+                },
+                "source": {
+                  "type": "keyword"
+                },
+                "text": {
+                  "type": "text",
+                  "index": false
+                },
+                "timestamp_ms": {
+                  "type": "date"
+                },
+                "truncated": {
+                  "type": "boolean"
+                },
+                "user": {
+                  "type": "object",
+                  "properties": {
+                    "contributors_enabled": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "created_at": {
+                      "type": "date",
+                      "format": "EEE MMM dd HH:mm:ss Z YYYY||strict_date_optional_time||epoch_millis"
+                    },
+                    "default_profile": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "default_profile_image": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "description": {
+                      "type": "text"
+                    },
+                    "favourites_count": {
+                      "type": "integer"
+                    },
+                    "follow_request_sent": {
+                      "type": "object"
+                    },
+                    "following": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "followers_count": {
+                      "type": "integer"
+                    },
+                    "friends_count": {
+                      "type": "integer"
+                    },
+                    "geo_enabled": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "type": "long",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "id_str": {
+                      "type": "keyword"
+                    },
+                    "is_translator": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "lang": {
+                      "type": "keyword"
+                    },
+                    "listed_count": {
+                      "type": "integer"
+                    },
+                    "location": {
+                      "type": "text",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "name": {
+                      "type": "text",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "notifications": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_background_color": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_background_image_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_background_image_url_https": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_background_tile": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_banner_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_image_url": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_image_url_https": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_link_color": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_sidebar_border_color": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_sidebar_fill_color": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_text_color": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "profile_use_background_image": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "protected": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "screen_name": {
+                      "type": "keyword"
+                    },
+                    "statuses_count": {
+                      "type": "integer"
+                    },
+                    "time_zone": {
+                      "type": "text",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "translator_type": {
+                      "type": "keyword",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "url": {
+                      "type": "text",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "utc_offset": {
+                      "type": "boolean",
+                      "index": false,
+                      "doc_values": false
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "source": {
+              "type": "keyword"
+            },
+            "text": {
+              "type": "text",
+              "fielddata": true,
+              "fielddata_frequency_filter": {
+                "min": 0.2,
+                "max": 1
+              },
+              "term_vector": "yes",
+              "analyzer": "brazilian",
+              "search_analyzer": "brazilian_stop",
+              "search_quote_analyzer": "brazilian",
+              "fields": {
+                "raw": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "text_terms": {
+              "type": "keyword",
+              "norms": true,
+              "normalizer": "normalizer_folding_lower"
+            },
+            "timestamp_ms": {
+              "type": "date"
+            },
+            "truncated": {
+              "type": "boolean",
+              "index": false,
+              "doc_values": false
+            },
+            "user": {
+              "type": "object",
+              "properties": {
+                "contributors_enabled": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "created_at": {
+                  "type": "date",
+                  "format": "EEE MMM dd HH:mm:ss Z YYYY||strict_date_optional_time||epoch_millis"
+                },
+                "default_profile": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "default_profile_image": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "description": {
+                  "type": "text"
+                },
+                "favourites_count": {
+                  "type": "integer"
+                },
+                "follow_request_sent": {
+                  "type": "object"
+                },
+                "following": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "followers_count": {
+                  "type": "integer"
+                },
+                "friends_count": {
+                  "type": "integer"
+                },
+                "geo_enabled": {
+                  "type": "boolean"
+                },
+                "id": {
+                  "type": "long",
+                  "index": false,
+                  "doc_values": false
+                },
+                "id_str": {
+                  "type": "keyword",
+                  "store": true
+                },
+                "is_translator": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "lang": {
+                  "type": "keyword"
+                },
+                "listed_count": {
+                  "type": "integer"
+                },
+                "location": {
+                  "type": "text",
+                  "index": false,
+                  "doc_values": false
+                },
+                "name": {
+                  "type": "text",
+                  "index": false,
+                  "doc_values": false
+                },
+                "notifications": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_background_color": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_background_image_url": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_background_image_url_https": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_background_tile": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_banner_url": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_image_url": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_image_url_https": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_link_color": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_sidebar_border_color": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_sidebar_fill_color": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_text_color": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "profile_use_background_image": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "protected": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "screen_name": {
+                  "type": "keyword"
+                },
+                "statuses_count": {
+                  "type": "integer"
+                },
+                "time_zone": {
+                  "type": "text",
+                  "index": false,
+                  "doc_values": false
+                },
+                "translator_type": {
+                  "type": "keyword",
+                  "index": false,
+                  "doc_values": false
+                },
+                "url": {
+                  "type": "text",
+                  "index": false,
+                  "doc_values": false
+                },
+                "utc_offset": {
+                  "type": "boolean",
+                  "index": false,
+                  "doc_values": false
+                },
+                "verified": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

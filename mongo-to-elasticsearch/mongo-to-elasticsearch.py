@@ -27,7 +27,7 @@ from lib_time import sleep_seconds
 import math
 
 # Define vars
-esclient = Elasticsearch([ES_URI])
+esclient = Elasticsearch()#Elasticsearch([ES_URI])
 mgclient = MongoClient(MG_URI)
 
 # max number of tweets sent at once to DB
@@ -56,7 +56,8 @@ timestamp_end = datetime_to_timestamp(datetime_end)
 
 # convert to miliseconds
 time_zone = 7200*1000
-time_ajust = 3600*24*3
+# time_ajust = 3600*24*3
+time_ajust = 0
 timestamp_now = (timestamp_now * 1000) -time_ajust
 timestamp_end = (timestamp_end * 1000) -time_ajust
 
@@ -69,6 +70,32 @@ actions = []; actions_append = actions.append
 # start_later = True
 # tweet_count = 0
 
+def fix_country_code(country_code):
+
+
+    if(type(country_code) is dict):
+        country_code_str = ''
+        for key in sorted(country_code.keys()):
+            country_code_str += country_code[key]
+    elif(type(country_code) is str):
+        country_code_str=country_code
+
+
+    return country_code_str
+
+# coisa = col.find({'status.retweeted_status.place.bounding_box.coordinates.0':{'$elemMatch':{'$eq':[-34.792907,-7.243257]}}})
+# print(coisa.count())
+# for item in coisa:
+#     coordenadas = item['status.retweeted_status.place.bounding_box.coordinates.0']
+#     lati=[]
+#     longit=[]
+#     for a,b,c,d in coordenadas:
+#         lati.append(a[0],b[0],c[0],d[0])
+
+#         longit.append(a[1],b[1],c[1],d[1])
+#     if(len(set(lati)) )
+# print(coisa['status']['retweeted_status']['place'])
+# quit()
 for i in range(1,15):
     title = 'twitter-'+datetime_to_str(datetime_from_timestamp((timestamp_query/1000)-1),'%Y-%m-%d')
     print(str(i)+'/14:', datetime_from_timestamp(timestamp_query/1000, '%d-%m-%Y'), '->', title)
@@ -77,7 +104,9 @@ for i in range(1,15):
     query = {"$and":[queryStart,queryEnd]}
     col_find = col.find(query)
     col_total = col_find.count()
-    pprint(query)
+
+
+
     for data in tqdm(col_find, total=col_total):
 
         # if start_later:
@@ -91,6 +120,7 @@ for i in range(1,15):
         data = dict(data)
 
 
+        # FIX TIMESTAMP
         data['status']['timestamp_ms'] = int(data['status']['timestamp_ms'])
         geocode = data['reverse_geocode']
 
@@ -104,6 +134,8 @@ for i in range(1,15):
 
         #     raise e
 
+
+        # FIX GEOCODE
         if isinstance(geocode,list):
             temp = geocode[0]
             geocode[0]=geocode[1]
@@ -114,23 +146,28 @@ for i in range(1,15):
         if(data['status']['place'] is not None ):
             if math.isnan(data['status']['place']['id']):
                 data['status']['place']['id']=None
+            data['status']['place']['country_code']=fix_country_code(data['status']['place']['country_code'])
 
+
+        # FIX PLACE ID AND COUNTRY_CODE
         if 'retweeted_status' in data['status'].keys() :
 
             if(data['status']['retweeted_status']['place'] is not None ):
                 if math.isnan(data['status']['retweeted_status']['place']['id']):
                     data['status']['retweeted_status']['place']['id']=None
-
+                data['status']['retweeted_status']['place']['country_code']=fix_country_code(data['status']['retweeted_status']['place']['country_code'])
 
             if 'quoted_status' in data['status']['retweeted_status'].keys() :
                 if(data['status']['retweeted_status']['quoted_status']['place'] is not None ):
                     if math.isnan(data['status']['retweeted_status']['quoted_status']['place']['id']):
                         data['status']['retweeted_status']['quoted_status']['place']['id']=None
+                    data['status']['retweeted_status']['quoted_status']['place']['country_code']=fix_country_code(data['status']['retweeted_status']['quoted_status']['place']['country_code'])
 
         if 'quoted_status' in data['status'].keys() :
             if(data['status']['quoted_status']['place'] is not None ):
                 if math.isnan(data['status']['quoted_status']['place']['id']):
                     data['status']['quoted_status']['place']['id']=None
+                data['status']['quoted_status']['place']['country_code']=fix_country_code(data['status']['quoted_status']['place']['country_code'])
 
 
 
@@ -140,7 +177,8 @@ for i in range(1,15):
             "_routing": "br-gov-inep",
             "_source": data}
         actions_append(action)
-        print
+
+
         while True:
             try: # dump x number of objects at a time
                 # print('is_str  ',data['status']['id_str'])
